@@ -17,12 +17,44 @@ def get_product(uuid):
     return False
 
 
-def product_update(uuid, name=None, ):
-    pass
+def add_images(img_url, product_id):
+    url = f'{config.shop_script_url_api}/shop.product.images.add?product_id={product_id}'
+    file = {'file': (f'img_{product_id}.jpg', requests.get(img_url).content, 'image/jpg')}
+    res = sess.post(url, files=file)
+    return res
 
 
-def product_add(uuid, article, brand, name, description, images, quantity, category, price):
-    pass
+def product_update(product_id, name=None, description=None, price=None):
+    data = {}
+    if name:
+        data += {'name': name, 'meta_title': name}
+    if description:
+        data += {'description': description, 'meta_description': description}
+    if price:
+        data += {'skus[price]': price}
+
+    method = '/shop.product.update'
+    ress = sess.post(f'{config.shop_script_url_api}{method}?id={product_id}', data=data)
+    return ress
 
 
-print(get_product('8027f20c-bde7-11eb-a581-000c29a2a548'))
+def product_add(uuid, name, description, images, price):
+    data = {
+        'name': name,
+        'type_id': config.none_category_id,
+        'description': description,
+        'meta_title': name,
+        'meta_description': description,
+        'skus[price]': price,
+        'sku_type': 1,
+        'status': 0,
+        'product[uuid]': uuid
+    }
+    res = sess.post(f'{config.shop_script_url_api}/shop.product.add', data=data)
+    if res.status_code == 200:
+        for img in images:
+            add_images(img, res.json()['id'])
+    return res
+
+
+print(product_add('f88b2b69-978c-11eb-b396-000c29add927', 'Test Product', 'Test Description', '', 1111).json())

@@ -8,7 +8,7 @@ sess.headers = {'Content-Type': 'application/json', 'Accept': "application/json"
 
 # Первый запрос к списку товаров
 method = '/offers'
-data = '?fields=name,images,category,collection'
+data = '?fields=name,images,category,collection,price,url'
 # Делаем запрос
 res = sess.get(config.url + method + data).json()
 print(res)
