@@ -1,5 +1,6 @@
 import requests
 import config
+import logging
 
 sess = requests.session()
 headers = {'Accept': "application/json, text/plain, */*", 'X-Requested-With': 'XMLHttpRequest', 'Authorization':
@@ -23,38 +24,44 @@ def add_images(img_url, product_id):
     res = sess.post(url, files=file)
     return res
 
-
 def product_update(product_id, name=None, description=None, price=None):
     data = {}
+
     if name:
-        data += {'name': name, 'meta_title': name}
+        data.update({'name': name, 'meta_title': name})
     if description:
-        data += {'description': description, 'meta_description': description}
+        data.update({'description': description, 'meta_description': description})
     if price:
-        data += {'skus[price]': price}
+        data.update({'base_price_selectable': price})
 
     method = '/shop.product.update'
+    if not data:
+        return False
+    print('update')
+    print(data)
     ress = sess.post(f'{config.shop_script_url_api}{method}?id={product_id}', data=data)
     return ress
 
 
-def product_add(uuid, name, description, images, price):
+def product_add(uuid, name, description, images, price, article):
     data = {
         'name': name,
         'type_id': config.none_category_id,
         'description': description,
         'meta_title': name,
         'meta_description': description,
-        'skus[price]': price,
+        'base_price_selectable': price,
+        'sku_id': article,
         'sku_type': 1,
         'status': 0,
-        'product[uuid]': uuid
+        'features[uuid]': uuid
     }
     res = sess.post(f'{config.shop_script_url_api}/shop.product.add', data=data)
-    if res.status_code == 200:
+    print(res.text)
+    if res.status_code == 200 and 'error' not in res.text:
         for img in images:
             add_images(img, res.json()['id'])
     return res
 
 
-print(product_add('f88b2b69-978c-11eb-b396-000c29add927', 'Test Product', 'Test Description', '', 1111).json())
+print(get_product('327a490a-99ac-11e9-9273-001dd8b74132'))
